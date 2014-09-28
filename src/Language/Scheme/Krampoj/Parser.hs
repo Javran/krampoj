@@ -5,22 +5,24 @@ import Control.Applicative hiding (many)
 import Text.Parsec hiding ((<|>),letter,digit)
 import Text.Parsec.String (Parser)
 import Data.Char
+import Data.Ix
+import Data.Function
+
+charBetween :: Char -> Char -> Parser Char
+charBetween = curry (satisfy . inRange)
 
 digit :: Parser Char
-digit = oneOf . concatMap show $ [0..9 :: Int]
+digit = charBetween '0' '9'
 
 specialInitial :: Parser Char
 specialInitial = oneOf "!$%&*/:<=>?^_~"
 
 -- | case insensitive char
 ciChar :: Char -> Parser Char
-ciChar ch = char ch1 <|> char ch2
-    where
-        ch1 = toLower ch
-        ch2 = toUpper ch
+ciChar ch = satisfy (((==) `on` toLower) ch)
 
 letter :: Parser Char
-letter = choice . map ciChar $ ['a' .. 'z']
+letter = charBetween 'a' 'z' <|> charBetween 'A' 'Z'
 
 initial :: Parser Char
 initial =  letter
@@ -44,3 +46,4 @@ peculiarIdentifier =  string "+"
 identifier :: Parser String
 identifier =  ((:) <$> initial <*> many subsequent)
           <|> peculiarIdentifier
+          <?> "identifier"
