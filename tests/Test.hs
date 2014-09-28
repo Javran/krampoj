@@ -29,7 +29,8 @@ testIdentifier =
 
         shouldSucceed = map ((~=?) <$> Just <*> (parseAllMaybe identifier))
                             validIdentifiers
-        shouldFail = []
+        shouldFail = map (\x -> Nothing ~=? parseAllMaybe identifier x)
+                         (words "1234 1234x ;;aaaAAA")
 
 main :: IO ()
 main = runTestFailIm testIdentifier
