@@ -94,3 +94,41 @@ suffix = suffix' <|> empty
 prefix :: R -> Parser String
 prefix r = try ( (++) <$> radixR r <*> exactness)
            <|> ( (++) <$> exactness <*> radixR r)
+
+uinteger :: R -> Parser String
+uinteger r = (++) <$> many1 (digitR r) <*> many (char '#')
+
+decimal :: R -> Parser String
+decimal R10 = (++) <$> (p1 <|> try p2 <|> p3) <*> suffix
+    where
+        p1, p2, p3 :: Parser String
+        -- p1 parses ". <digit 10>+ #* "
+        p1 = do
+            _ <- char '.'
+            xs <- many1 (digitR R10)
+            hs <- many (char '#')
+            return $ '.' : xs ++ hs
+        -- p2 parses things that begins with "<digit 10>"
+        -- backtrack is necessary since the proceeding parser needs it
+        p2 = do
+            -- <digit 10>+
+            xs <- many1 (digitR R10)
+            -- '. <digit 10>*' or '#+ .'
+            let p21 = (++) <$> string "." <*> many (digitR R10)
+                p22 = (++) <$> many1 (char '#') <*> string "."
+            ys <- p21 <|> p22
+            -- '#*'
+            zs <- many (char '#')
+            return (xs ++ ys ++ zs)
+        -- p3 parses <uinteger 10>
+        p3 = uinteger R10
+decimal _ = error "not defined by R5RS"
+
+ureal :: R -> Parser String
+ureal r =  try (decimal r)
+       <|> do xs <- uinteger r
+              ys <- option "" ((++) <$> string "/" <*> uinteger r)
+              return(xs ++ ys)
+
+real :: R -> Parser String
+real r = (:) <$> sign <*> ureal r
