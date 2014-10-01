@@ -26,6 +26,9 @@ specialInitial = oneOf "!$%&*/:<=>?^_~"
 ciChar :: Char -> Parser Char
 ciChar ch = satisfy (((==) `on` toLower) ch)
 
+ciString :: String -> Parser String
+ciString = mapM ciChar
+
 letter :: Parser Char
 letter = charBetween 'a' 'z' <|> charBetween 'A' 'Z'
 
@@ -62,14 +65,17 @@ digitR R16 =  digitR R10
 
 -- TODO: case insensitive string
 radixR :: R -> Parser String
-radixR R2 = string "#b"
-radixR R8 = string "#o"
-radixR R10 = string "#d" <|> empty
-radixR R16 = string "#x"
+radixR R2  = ciString "#b"
+radixR R8  = ciString "#o"
+radixR R10 = ciString "#d" <|> empty
+radixR R16 = ciString "#x"
 
+-- TODO: to live easier with numbers
+-- we need to make sure somewhere that
+-- everything is in lowercase
 exactness :: Parser String
-exactness = (char '#' >> ( (char 'i' >> return "#i")
-                       <|> (char 'e' >> return "#e")))
+exactness = (char '#' >> ( (ciChar 'i' >> return "#i")
+                       <|> (ciChar 'e' >> return "#e")))
          <|> empty
 
 sign :: Parser Char

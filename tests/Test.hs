@@ -6,6 +6,7 @@ import Text.Parsec.String (Parser)
 import Control.Applicative
 import System.Exit
 import Control.Monad
+import Data.Char
 
 parseAllMaybe :: Parser a -> String -> Maybe a
 parseAllMaybe p x = case parse (p <* eof) "" x of
@@ -27,10 +28,21 @@ testIdentifier =
                                  \+ V17a <=? a34kTMNs \
                                  \the-word-recursion-has-many-meanings"
 
-        shouldSucceed = map ((~=?) <$> Just <*> (parseAllMaybe identifier))
+        shouldSucceed = map ((~=?) <$> Just <*> parseAllMaybe identifier)
                             validIdentifiers
         shouldFail = map (\x -> Nothing ~=? parseAllMaybe identifier x)
                          (words "1234 1234x ;;aaaAAA")
 
+testCIString :: Test
+testCIString =
+    "ciString" ~: TestList $ map makeTestcase testStrs
+    where
+        testStrs = words "AAA bbb #e #E #I #i #whatever #WhAtE4321EvEr"
+        makeTestcase s = Just s ~=? parseAllMaybe (ciString s') s
+            where
+                s' = map toLower s
+
 main :: IO ()
-main = runTestFailIm testIdentifier
+main = mapM_ runTestFailIm [ testIdentifier
+                           , testCIString
+                           ]
