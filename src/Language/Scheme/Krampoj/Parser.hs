@@ -132,3 +132,36 @@ ureal r =  try (decimal r)
 
 real :: R -> Parser String
 real r = (:) <$> sign <*> ureal r
+
+complex :: R -> Parser String
+complex r = try p1 <|> p2
+    where
+        -- p1 parses things that begins with "+" or "-"
+        -- needs backtrack
+        p1 = do
+            xs <- string "+" <|> string "-"
+            ys <- option "" (ureal r)
+            zs <- ciString "i"
+            return (xs ++ ys ++ zs)
+
+        -- p2 parses things that begins with <real>
+        p2 = do
+            xs <- real r
+            let p2a = (++) <$> string "@" <*> real r
+                p2b = do
+                    as <- string "+" <|> string "-"
+                    bs <- option "" (ureal r)
+                    cs <- ciString "i"
+                    return (as ++ bs ++ cs)
+            ys <- option "" (p2a <|> p2b)
+            return (xs ++ ys)
+
+num :: R -> Parser String
+num r = (++) <$> prefix r <*> complex r
+
+number :: Parser String
+number =  try (num R2)
+      <|> try (num R8)
+      <|> try (num R10)
+      <|>      num R16
+      <?> "number"
