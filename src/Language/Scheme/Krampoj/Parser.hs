@@ -1,9 +1,10 @@
+{-# LANGUAGE NoMonomorphismRestriction, TypeFamilies #-}
 module Language.Scheme.Krampoj.Parser
 where
 
-import Control.Applicative hiding (many)
-import Text.Parsec hiding ((<|>),letter,digit)
-import Text.Parsec.String (Parser)
+import Control.Applicative
+import Text.Megaparsec
+import Text.Megaparsec.String (Parser)
 import Data.Char
 import Data.Ix
 import Data.Function
@@ -12,6 +13,9 @@ data R = R2
        | R8
        | R10
        | R16
+
+many1 :: Alternative f => f a -> f [a]
+many1 = some
 
 charBetween :: Char -> Char -> Parser Char
 charBetween = curry (satisfy . inRange)

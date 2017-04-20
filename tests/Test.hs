@@ -1,9 +1,9 @@
 import Test.HUnit
 
 import Language.Scheme.Krampoj.Parser
-import Text.Parsec
-import Text.Parsec.String (Parser)
-import Control.Applicative
+import Text.Megaparsec
+import Text.Megaparsec.String (Parser)
+
 import System.Exit
 import Control.Monad
 import Data.Char
